@@ -69,6 +69,37 @@ class SPageFilePhysics(ctypes.Structure):
         ('numberOfTyresOut', c_int32),
         ('pitLimiterOn', c_int32),
         ('abs', c_float),
+        ('kersCharge', c_float),
+        ('kersInput', c_float),
+        ('autoShifterOn', c_int32),
+        ('rideHeight', c_float * 2),
+        ('turboBoost', c_float),
+        ('ballast', c_float),
+        ('airDensity', c_float),
+        ('airTemp', c_float),
+        ('roadTemp', c_float),
+        ('localAngularVel', c_float * 3),
+        ('finalFF', c_float),
+        ('performanceMeter', c_float),
+        ('engineBrake', c_int32),
+        ('ersRecoveryLevel', c_int32),
+        ('ersPowerLevel', c_int32),
+        ('ersHeatCharging', c_int32),
+        ('ersIsCharging', c_int32),
+        ('kersCurrentKJ', c_float),
+        ('drsAvailable', c_int32),
+        ('drsEnabled', c_int32),
+        ('brakeTemp', c_float * 4),
+        ('clutch', c_float),
+        ('tyreTempI', c_float * 4),
+        ('tyreTempM', c_float * 4),
+        ('tyreTempO', c_float * 4),
+        ('isAIControlled', c_int32),
+        ('tyreContactPoint', (c_float * 4) * 3),
+        ('tyreContactNormal', (c_float * 4) * 3),
+        ('tyreContactHeading', (c_float * 4) * 3),
+        ('brakeBias', c_float),
+        ('localVelocity', c_float * 3)
     ]
 
 
@@ -94,19 +125,24 @@ class SPageFileGraphic(ctypes.Structure):
         ('lastSectorTime', c_int32),
         ('numberOfLaps', c_int32),
         ('tyreCompound', c_wchar * 33),
-
         ('replayTimeMultiplier', c_float),
         ('normalizedCarPosition', c_float),
         ('carCoordinates', c_float * 3),
+        ('penaltyTime', c_float),
+        ('flags', c_int32),
+        ('idealLineOn', c_int32),
+        ('isInPitLane', c_int32),
+        ('surfaceGrip', c_float),
+        ('mandatoryPitDone', c_int32),
+        ('windSpeed', c_float),
+        ('windDirection', c_float)
     ]
-
 
 class SPageFileStatic(ctypes.Structure):
     _pack_ = 4
     _fields_ = [
         ('_smVersion', c_wchar * 15),
         ('_acVersion', c_wchar * 15),
-        # session static info
         ('numberOfSessions', c_int32),
         ('numCars', c_int32),
         ('carModel', c_wchar * 33),
@@ -115,14 +151,38 @@ class SPageFileStatic(ctypes.Structure):
         ('playerSurname', c_wchar * 33),
         ('playerNick', c_wchar * 33),
         ('sectorCount', c_int32),
-
-        # car static info
         ('maxTorque', c_float),
         ('maxPower', c_float),
         ('maxRpm', c_int32),
         ('maxFuel', c_float),
         ('suspensionMaxTravel', c_float * 4),
         ('tyreRadius', c_float * 4),
+        ('maxTurboBoost', c_float),
+        ('deprecated_1', c_float),
+        ('deprecated_2', c_float),
+        ('penaltiesEnabled', c_int32),
+        ('aidFuelRate', c_float),
+        ('aidTireRate', c_float),
+        ('aidMechanicalDamage', c_float),
+        ('aidAllowTyreBlankets', c_int32),
+        ('aidStability', c_float),
+        ('aidAutoClutch', c_int32),
+        ('aidAutoBlip', c_int32),
+        ('hasDRS', c_int32),
+        ('hasERS', c_int32),
+        ('hasKERS', c_int32),
+        ('kersMaxJ', c_float),
+        ('engineBrakeSettingsCount', c_int32),
+        ('ersPowerControllerCount', c_int32),
+        ('trackSPlineLength', c_float),
+        ('trackConfiguration', c_wchar * 33),
+        ('ersMaxJ', c_float),
+        ('isTimedRace', c_int32),
+        ('hasExtraLap', c_int32),
+        ('carSkin', c_wchar * 33),
+        ('reversedGridPositions', c_int32),
+        ('PitWindowStart', c_int32),
+        ('PitWindowEnd', c_int32)
     ]
 
 

@@ -27,12 +27,12 @@ import time
 
 locale.setlocale(locale.LC_ALL, '')
 
-class Cacti:
+class Ctelem:
 
     is_using_local_acti=False
     trig_socket=0
     udp2_socket=0
-    udp2_dataflow_ip='172.23.182.164'
+    udp2_dataflow_ip='172.18.32.1'
     SOCKET_TIMEOUT=3.0
     ACTI_TRIG_PORT=10000
     ACTI_UDP2_PORT=10000
@@ -67,27 +67,47 @@ class Cacti:
     AC_DRIFT=5
     AC_DRAG=6
 
-# The acti object
-acti = Cacti()
+# The telem object
+telem = Ctelem()
+
+
+def onLoad(v1, v2):
+    global telem
+    config = configparser.ConfigParser()
+    try:
+        config.read("apps/python/ros_telem/config.ini")
+        telem.udp2_dataflow_ip = config.get("ros_telem_config", "telem_ip_address")
+        telem.ACTI_UDP2_PORT = int(config.get("ros_telem_config", "telem_port"))
+        telem.auto_launch_chk_val = config.getint("ros_telem_config", "auto_launch_controller")
+        ac.setText(telem.udp2_dataflow_ip, config.get("ros_telem_config", "telem_ip_address"))
+        ac.setText(telem.ACTI_UDP2_PORT, config.get("ros_telem_config", "telem_port"))
+        ac.setValue(telem.auto_launch_chk_cntrl, telem.auto_launch_chk_val)
+        ac.console(str(telem.udp2_dataflow_ip))
+        ac.log("Settings Successfully Loaded.", 1)
+    except Exception as e:
+        ac.log("Config ERROR. type=%s" % (type(e)), 1)
+        
+
 
 
 
 
 def acMain(ac_version):
-    global acti
+    global telem
     appWindow = ac.newApp("ROS_telem")
     ac.setSize(appWindow, 200, 200)
     try:
-        acti.udp2_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        acti.udp2_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        acti.udp2_socket.settimeout(acti.SOCKET_TIMEOUT)
+        telem.udp2_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        telem.udp2_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        telem.udp2_socket.settimeout(telem.SOCKET_TIMEOUT)
     except Exception as e:
         ac.console("Error binding to selected port")
-    acti.init_complete = True
+    telem.init_complete = True
+    onLoad(0, 0)
     return "ROS_telem"
 
 def acUpdate(deltaT):
-    global acti
+    global telem
     
     try:
         sim_info_obj = sim_info.SimInfo()
@@ -134,6 +154,20 @@ def acUpdate(deltaT):
         
         PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.RPM))
         
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.CurrentTyresCoreTemp)[0])
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.CurrentTyresCoreTemp)[1])
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.CurrentTyresCoreTemp)[2])
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.CurrentTyresCoreTemp)[3])
+        
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.AccG)[0])
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.AccG)[1])
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.AccG)[2])
+        
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.Load)[0])
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.Load)[1])
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.Load)[2])
+        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.Load)[3])
+        
         
         '''
 
@@ -161,11 +195,6 @@ def acUpdate(deltaT):
         PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.LocalVelocity)[0])
         PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.LocalVelocity)[1])
         PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.LocalVelocity)[2])
-
-        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.CurrentTyresCoreTemp)[0])
-        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.CurrentTyresCoreTemp)[1])
-        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.CurrentTyresCoreTemp)[2])
-        PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.CurrentTyresCoreTemp)[3])
 
         PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.DynamicPressure)[0])
         PackingString += "f"; PackingList.append(ac.getCarState(0, acsys.CS.DynamicPressure)[1])
@@ -206,14 +235,14 @@ def acUpdate(deltaT):
         # XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         #ac.console(PackingString)
         sim_info_obj.close()
-        ACTI_CarInfo = struct.pack(PackingString, *PackingList)
-        acti.udp2_socket.sendto(ACTI_CarInfo, (acti.udp2_dataflow_ip, acti.ACTI_UDP2_PORT))
+        CarInfo = struct.pack(PackingString, *PackingList)
+        telem.udp2_socket.sendto(CarInfo, (telem.udp2_dataflow_ip, telem.ACTI_UDP2_PORT))
 
     except Exception as e:
         ac.console("Error sending packet")
         ac.console(str(e))
 
 def acShutdown(*args):
-    global acti
-    acti.udp2_socket.close()
+    global telem
+    telem.udp2_socket.close()
 
